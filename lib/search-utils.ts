@@ -95,6 +95,11 @@ export function applyFiltersAndSort(results: VideoResult[], options: SearchOptio
   if (options.sort === "longest") {
     return filtered.sort((a, b) => (b.duration ?? -1) - (a.duration ?? -1));
   }
+  if (options.sort === "popular") {
+    const popularity = (video: VideoResult) =>
+      (video.popularity?.views ?? 0) + (video.popularity?.downloads ?? 0) * 3 + (video.popularity?.likes ?? 0) * 8;
+    return filtered.sort((a, b) => popularity(b) - popularity(a));
+  }
   return filtered;
 }
 

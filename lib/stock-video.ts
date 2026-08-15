@@ -1,4 +1,5 @@
 export type Orientation = "portrait" | "landscape" | "square";
+export type FormatFilter = "auto" | "9:16" | "16:9" | "1:1";
 export type DurationFilter = "any" | "under-15" | "15-60" | "over-60";
 export type QualityFilter = "any" | "hd" | "full-hd" | "4k";
 export type SortOption = "best-match" | "popular" | "newest" | "shortest" | "longest";
@@ -19,12 +20,21 @@ export type VideoResult = {
   quality?: string;
   orientation?: Orientation;
   author?: string;
+  tags?: string[];
+  popularity?: {
+    views?: number;
+    downloads?: number;
+    likes?: number;
+  };
+  fileSize?: number;
+  clipScore?: number;
 };
 
 export type SearchOptions = {
   page?: number;
   perPage?: number;
   orientation?: Orientation;
+  format?: FormatFilter;
   duration?: DurationFilter;
   quality?: QualityFilter;
   sort?: SortOption;
@@ -64,6 +74,13 @@ export type SearchResponse = {
 export const MAX_QUERIES = 10;
 export const MAX_QUERY_LENGTH = 100;
 export const DEFAULT_RESULTS_PER_GROUP = 20;
+
+export function formatToOrientation(format?: FormatFilter): Orientation | undefined {
+  if (format === "9:16") return "portrait";
+  if (format === "16:9") return "landscape";
+  if (format === "1:1") return "square";
+  return undefined;
+}
 
 export function getOrientation(width?: number, height?: number): Orientation | undefined {
   if (!width || !height) return undefined;

@@ -48,12 +48,20 @@ function normalize(video: PexelsVideo): VideoResult {
   const download = videoFile(video.video_files, "download");
   const width = download?.width ?? video.width;
   const height = download?.height ?? video.height;
+  const slug = (() => {
+    try {
+      const segment = new URL(video.url).pathname.split("/").filter(Boolean).at(-1) ?? "";
+      return segment.replace(/-?\d+$/, "").replace(/-/g, " ").trim();
+    } catch {
+      return "";
+    }
+  })();
   return {
     id: String(video.id),
     provider: "Pexels",
     providerUrl: video.url,
-    title: video.user?.name ? `Video by ${video.user.name}` : `Pexels video ${video.id}`,
-    description: "Stock footage from Pexels",
+    title: slug || (video.user?.name ? `Video by ${video.user.name}` : `Pexels video ${video.id}`),
+    description: slug ? `${slug}. Footage by ${video.user?.name ?? "a Pexels creator"}.` : "Stock footage from Pexels",
     thumbnailUrl: video.image,
     previewUrl: preview?.link,
     downloadUrl: download?.link,
@@ -64,6 +72,7 @@ function normalize(video: PexelsVideo): VideoResult {
     quality: getQuality(width ?? undefined, height ?? undefined),
     orientation: getOrientation(video.width, video.height),
     author: video.user?.name,
+    tags: slug ? slug.split(" ") : undefined,
   };
 }
 

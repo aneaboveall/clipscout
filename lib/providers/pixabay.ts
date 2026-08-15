@@ -16,6 +16,8 @@ type PixabayVideo = {
   duration?: number;
   user?: string;
   views?: number;
+  downloads?: number;
+  likes?: number;
   videos: { large?: PixabayRendition; medium?: PixabayRendition; small?: PixabayRendition; tiny?: PixabayRendition };
 };
 type PixabayResponse = { totalHits: number; hits: PixabayVideo[] };
@@ -29,7 +31,7 @@ function availableRenditions(video: PixabayVideo): PixabayRendition[] {
 function normalize(video: PixabayVideo): VideoResult {
   const renditions = availableRenditions(video);
   const download = [...renditions].sort((a, b) => b.width * b.height - a.width * a.height)[0];
-  const preview = video.videos.small?.url ? video.videos.small : video.videos.tiny ?? download;
+  const preview = video.videos.tiny?.url ? video.videos.tiny : video.videos.small ?? download;
   const thumbnail = preview?.thumbnail || download?.thumbnail;
   const title = video.tags?.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 3).join(" · ");
   return {
@@ -47,6 +49,9 @@ function normalize(video: PixabayVideo): VideoResult {
     quality: getQuality(download?.width, download?.height),
     orientation: getOrientation(download?.width, download?.height),
     author: video.user,
+    tags: video.tags?.split(",").map((tag) => tag.trim()).filter(Boolean),
+    popularity: { views: video.views, downloads: video.downloads, likes: video.likes },
+    fileSize: download?.size,
   };
 }
 

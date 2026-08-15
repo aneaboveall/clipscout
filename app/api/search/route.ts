@@ -7,7 +7,7 @@ import {
   parseQueries,
   SearchInputError,
 } from "@/lib/search-utils";
-import { DEFAULT_RESULTS_PER_GROUP, type Orientation } from "@/lib/stock-video";
+import { DEFAULT_RESULTS_PER_GROUP, formatToOrientation, type FormatFilter, type Orientation } from "@/lib/stock-video";
 
 export const dynamic = "force-dynamic";
 
@@ -19,13 +19,18 @@ export async function GET(request: Request) {
     const page = Math.max(1, Math.min(Number(url.searchParams.get("page")) || 1, 50));
     const perPage = Math.max(1, Math.min(Number(url.searchParams.get("perPage")) || DEFAULT_RESULTS_PER_GROUP, 40));
     const orientationValue = url.searchParams.get("orientation");
-    const orientation = (["portrait", "landscape", "square"] as const).includes(orientationValue as Orientation)
+    const formatValue = url.searchParams.get("format") as FormatFilter | null;
+    const format = (["auto", "9:16", "16:9", "1:1"] as readonly string[]).includes(formatValue ?? "")
+      ? (formatValue as FormatFilter)
+      : "auto";
+    const orientation = formatToOrientation(format) ?? ((["portrait", "landscape", "square"] as const).includes(orientationValue as Orientation)
       ? (orientationValue as Orientation)
-      : undefined;
+      : undefined);
     const response = await searchStockVideos(queries, {
       page,
       perPage,
       orientation,
+      format,
       duration: asDurationFilter(url.searchParams.get("duration")),
       quality: asQualityFilter(url.searchParams.get("quality")),
       sort: asSortOption(url.searchParams.get("sort")),

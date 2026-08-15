@@ -1,6 +1,7 @@
 import { PexelsProvider } from "@/lib/providers/pexels";
 import { PixabayProvider } from "@/lib/providers/pixabay";
 import { applyFiltersAndSort, dedupeResults } from "@/lib/search-utils";
+import { rankClips } from "@/lib/clip-score";
 import {
   DEFAULT_RESULTS_PER_GROUP,
   type SearchGroup,
@@ -21,8 +22,11 @@ function interleave(lists: VideoResult[][]): VideoResult[] {
   return output;
 }
 
-export async function searchStockVideos(queries: string[], options: SearchOptions): Promise<SearchResponse> {
-  const providers: StockVideoProvider[] = [new PexelsProvider(), new PixabayProvider()];
+export async function searchStockVideos(
+  queries: string[],
+  options: SearchOptions,
+  providers: StockVideoProvider[] = [new PexelsProvider(), new PixabayProvider()],
+): Promise<SearchResponse> {
   const available = providers.filter((provider) => provider.available);
   const statuses: SearchResponse["providers"] = {
     pexels: { available: providers[0].available },
@@ -56,7 +60,8 @@ export async function searchStockVideos(queries: string[], options: SearchOption
         };
       }
     });
-    const results = applyFiltersAndSort(dedupeResults(interleave(providerResults)), options).slice(0, targetCount);
+    const filtered = applyFiltersAndSort(dedupeResults(interleave(providerResults)), options);
+    const results = (options.sort === "best-match" ? rankClips(filtered, query, options) : filtered).slice(0, targetCount);
     return { query, results, hasMore };
   });
 
